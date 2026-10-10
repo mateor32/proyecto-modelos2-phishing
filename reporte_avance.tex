@@ -1,0 +1,234 @@
+
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+
+\begin{document}
+
+\title{Detección de URLs de \textit{phishing} mediante aprendizaje supervisado sobre el conjunto de datos PhiUSIIL}
+
+\author{
+\IEEEauthorblockN{<<Nombre Apellido>>, <<Nombre Apellido>>}
+\IEEEauthorblockA{Facultad de Ingeniería, Universidad de Antioquia\\
+Curso: Introducción al Machine Learning\\
+Correo: <<usuario>>@udea.edu.co}
+}
+
+\maketitle
+
+\begin{abstract}
+El \textit{phishing} basado en URLs es una de las amenazas de ingeniería social más
+extendidas y las listas negras tradicionales no alcanzan a cubrir los sitios creados
+cada día. Este trabajo aborda la detección automática de URLs de \textit{phishing} como
+un problema de clasificación binaria supervisada, empleando el conjunto de datos público
+PhiUSIIL (235.795 URLs y 54 características léxicas, derivadas y del código HTML). En este
+avance se presentan la descripción del problema, el análisis exploratorio de los datos y
+una revisión del estado del arte sobre el mismo problema y conjunto de datos.
+\end{abstract}
+
+\begin{IEEEkeywords}
+phishing, detección de URLs, clasificación, aprendizaje supervisado, seguridad informática.
+\end{IEEEkeywords}
+
+%=============================================================================
+\section{Introducción}
+%=============================================================================
+El \textit{phishing} es un ataque en el que un sitio web fraudulento suplanta a una entidad
+legítima para robar credenciales o información financiera de los usuarios. Las defensas
+basadas en listas negras son reactivas: solo bloquean URLs ya reportadas, por lo que fallan
+ante los sitios nuevos, que tienen además un tiempo de vida muy corto. Esto motiva el uso de
+\textit{machine learning} para aprender, a partir de características de la URL y de la página,
+patrones que permitan clasificar un sitio como legítimo o fraudulento de forma automática y
+anticipada.
+
+El objetivo de este proyecto es construir y validar un modelo de aprendizaje supervisado que
+clasifique una URL como legítima o de \textit{phishing} a partir del conjunto de datos
+PhiUSIIL \cite{prasad2024}. Este documento corresponde al avance parcial y cubre dos secciones:
+la descripción del problema con su análisis exploratorio (Sección~\ref{sec:problema}) y la
+revisión del estado del arte (Sección~\ref{sec:estado}). El código que reproduce los resultados
+está disponible en el repositorio del proyecto\footnote{<<URL del repositorio de GitHub>>}.
+
+%=============================================================================
+\section{Descripción del problema}
+\label{sec:problema}
+%=============================================================================
+
+\subsection{Contexto y utilidad de la solución}
+Se busca decidir, de forma automática, si una URL corresponde a un sitio legítimo o a uno de
+\textit{phishing}. Una solución basada en ML es útil porque generaliza a URLs no vistas (a
+diferencia de las listas negras), puede integrarse en navegadores, clientes de correo o
+\textit{gateways} de red, y opera en tiempo casi real. El reto es mantener una alta tasa de
+detección con una baja tasa de falsos positivos, ya que bloquear sitios legítimos degrada la
+experiencia del usuario.
+
+\subsection{Descripción del conjunto de datos}
+El conjunto de datos PhiUSIIL \cite{prasad2024}, disponible en el UCI Machine Learning
+Repository, contiene \textbf{235.795 muestras} y \textbf{54 características} más la variable
+objetivo. Cada muestra representa una URL y su página web asociada. Las clases se distribuyen en
+\textbf{134.850 URLs legítimas} (\texttt{label}=1, 57,2\,\%) y \textbf{100.945 URLs de
+\textit{phishing}} (\texttt{label}=0, 42,8\,\%), por lo que el problema está
+\emph{moderadamente balanceado} (Fig.~\ref{fig:balance}). Las características se agrupan en tres
+familias:
+\begin{itemize}
+  \item \textbf{Léxicas/estructurales de la URL:} \texttt{URLLength}, \texttt{DomainLength},
+        \texttt{NoOfSubDomain}, \texttt{NoOfDegitsInURL}, \texttt{SpacialCharRatioInURL},
+        \texttt{IsDomainIP}, entre otras.
+  \item \textbf{Derivadas:} \texttt{URLSimilarityIndex}, \texttt{CharContinuationRate},
+        \texttt{TLDLegitimateProb}, \texttt{URLCharProb}, calculadas por los autores a partir
+        de otras variables.
+  \item \textbf{Del código HTML:} \texttt{LineOfCode}, \texttt{HasTitle}, \texttt{HasFavicon},
+        \texttt{IsResponsive}, \texttt{HasPasswordField}, \texttt{NoOfJS},
+        \texttt{HasCopyrightInfo}, \texttt{HasSocialNet}, etc.
+\end{itemize}
+Además hay cuatro variables de texto: \texttt{URL}, \texttt{Domain}, \texttt{TLD} y
+\texttt{Title}. En cuanto a tipos, 50 variables son numéricas (de las cuales 19 son binarias
+0/1) y 4 son de texto/categóricas.
+
+\textbf{Datos faltantes.} El conjunto \emph{no presenta valores faltantes} en ninguna columna,
+por lo que no se requiere una estrategia de imputación. Tampoco existen filas completamente
+duplicadas.
+
+\textbf{Codificación de variables.} Las variables de texto \texttt{URL}, \texttt{Domain} y
+\texttt{Title} tienen una cardinalidad cercana al número de muestras (p.\,ej. 235.370 URLs
+únicas), por lo que son prácticamente identificadores y no se codifican con \textit{one-hot};
+se descartan como variables directas o se reservan para una posible extracción de
+características de texto. La variable \texttt{TLD} tiene 695 categorías sin orden; dado que un
+\textit{one-hot} generaría cientos de columnas dispersas, se opta por usar la variable numérica
+\texttt{TLDLegitimateProb} (que ya codifica el TLD como una probabilidad) o una codificación por
+frecuencia. Las variables numéricas tienen escalas muy distintas y colas largas (p.\,ej.
+\texttt{LineOfCode} con máximo de 442.666), por lo que se aplicará \textbf{estandarización}
+(\texttt{StandardScaler}) para los modelos sensibles a la escala, ajustada solo sobre el
+conjunto de entrenamiento.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{figures/01_class_balance.png}
+  \caption{Distribución de clases del conjunto PhiUSIIL (57,2\,\% legítimas, 42,8\,\% phishing).}
+  \label{fig:balance}
+\end{figure}
+
+\subsection{Análisis exploratorio}
+El análisis de correlación muestra que varias características del código HTML y derivadas
+separan bien las clases: \texttt{URLSimilarityIndex} ($\rho\approx0{,}86$),
+\texttt{HasSocialNet} ($0{,}78$), \texttt{HasCopyrightInfo} ($0{,}74$) y \texttt{IsHTTPS}
+($0{,}61$). Se identificó una posible \textbf{fuga de información}: todas las URLs con
+\texttt{IsHTTPS}=1 están etiquetadas como legítimas, y \texttt{URLSimilarityIndex} está
+fuertemente asociada a la etiqueta. Esto podría inflar el desempeño, por lo que en las fases de
+modelado se evaluará el efecto de estas variables para garantizar que el modelo generalice. El
+detalle del EDA (dimensiones, tipos, duplicados, cardinalidad, distribuciones y correlaciones)
+se encuentra en el notebook del repositorio, que comparte las mismas secciones de este informe.
+
+\subsection{Paradigma de aprendizaje}
+El problema se enmarca en el \textbf{aprendizaje supervisado}, ya que se dispone de un conjunto
+de pares etiquetados $\mathcal{D}=\{(\mathbf{x}_i,y_i)\}_{i=1}^{N}$ con $y_i\in\{0,1\}$. Como la
+variable de salida es categórica (legítima / phishing), se trata de un problema de
+\textbf{clasificación binaria}. Este paradigma es el apropiado porque el objetivo es predecir
+una etiqueta conocida a partir de ejemplos previos, y no descubrir estructura latente (lo que
+correspondería a aprendizaje no supervisado). Dado el balance moderado de clases, se usará una
+partición \textbf{estratificada} y, además de la exactitud, se reportarán métricas robustas al
+desbalance como F1, \textit{balanced accuracy}, MCC y el área bajo la curva ROC (AUC).
+
+%=============================================================================
+\section{Estado del arte}
+\label{sec:estado}
+%=============================================================================
+La Tabla~\ref{tab:sota} resume trabajos que abordan la detección de \textit{phishing} por URL
+usando el conjunto de datos PhiUSIIL. El trabajo original \cite{prasad2024} introduce el
+conjunto de datos y un marco de detección basado en un \emph{índice de similitud} de la URL y
+\emph{aprendizaje incremental}, que permite actualizar el modelo ante URLs nuevas.
+Posteriormente, \cite{gobinath2026} propone una red neuronal profunda con mecanismo de atención
+\textit{multi-head} (ADUIN) orientada a la detección de ataques de día cero, mientras que
+\cite{bao2026} compara algoritmos clásicos (Random Forest, SVM, Naïve Bayes y una red MLP) y
+reporta exactitudes superiores al 99\,\% sobre PhiUSIIL. Finalmente, \cite{yulianti2026} estudia
+métodos de selección de características y muestra que con LASSO ($k=5$ variables) se obtiene un
+F1 equivalente al del conjunto completo, lo que apunta a modelos más eficientes sin pérdida de
+desempeño.
+
+Una métrica que no se vio en clase y que aparece en estos trabajos es el \textbf{coeficiente
+kappa de Cohen}, que mide la concordancia corregida por azar:
+\begin{equation}
+\kappa = \frac{p_o - p_e}{1 - p_e},
+\end{equation}
+donde $p_o$ es la proporción de aciertos observada y $p_e$ la proporción de acuerdo esperada por
+azar. Las demás métricas reportadas (exactitud, precisión, \textit{recall}, F1 y AUC) se
+estudiaron en el curso.
+
+% ---- Tabla comparativa (máx. 1 página para toda la sección) ----
+\begin{table*}[t]
+\centering
+\caption{Trabajos que emplean el conjunto de datos PhiUSIIL.}
+\label{tab:sota}
+\small
+\begin{tabular}{p{2.6cm} p{1.6cm} p{3.0cm} p{2.6cm} p{2.4cm} p{2.6cm}}
+\toprule
+\textbf{Trabajo} & \textbf{Paradigma} & \textbf{Técnica(s)} & \textbf{Validación} & \textbf{Métricas} & \textbf{Resultados} \\
+\midrule
+Prasad \& Chandra, 2024 \cite{prasad2024} \newline \textit{Computers \& Security} (Elsevier) &
+Supervisado (clasif.) &
+Índice de similitud de URL + aprendizaje incremental (MLP) &
+Entrenamiento/prueba &
+Exactitud, precisión, recall, F1 &
+Marco propuesto de alta exactitud \newline (<<confirmar \% del PDF>>) \\
+\addlinespace
+Gobinath \& Manikandan, 2026 \cite{gobinath2026} \newline \textit{Scientific Reports} (Nature) &
+Supervisado (clasif.) &
+Red neuronal profunda con atención \textit{multi-head} (ADUIN); \textit{baselines}: SVM, RF, LR &
+División estratificada 70/15/15 + 10 repeticiones (t-test, McNemar) &
+Exactitud, precisión, recall, F1, FPR, detección día-cero &
+95\,\% exactitud; 93\,\% precisión; 92\,\% detección día-cero; FPR 3,5\,\% \\
+\addlinespace
+Bao \textit{et al.}, 2026 \cite{bao2026} \newline \textit{Computers, Materials \& Continua} &
+Supervisado (clasif.) &
+Random Forest, SVM, Naïve Bayes (Gaussiano), red MLP &
+Hold-out estratificado 80/20 (+ k-fold) &
+Exactitud, F1, ROC-AUC, log-loss &
+RF 99,99\,\%; MLP 99,98\,\%; SVM 99,97\,\% (exactitud) \\
+\addlinespace
+Yulianti \& Forenziana, 2026 \cite{yulianti2026} \newline \textit{Formosa J. of Comp. and Inf. Science} &
+Supervisado (clasif.) &
+Selección de características (filtro, \textit{wrapper}, embebido/LASSO) &
+Validación cruzada ($k$-fold) &
+F1, desviación estándar por \textit{fold} &
+LASSO ($k{=}5$): F1 0,9975 vs. 0,9965 del conjunto completo \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\textbf{Observación.} Los desempeños reportados sobre PhiUSIIL son muy altos ($>99\,\%$ en varios
+casos), lo que es coherente con la fuerte correlación de algunas características con la etiqueta
+observada en el EDA. Esto refuerza la necesidad de un protocolo de validación cuidadoso en las
+fases siguientes del proyecto.
+
+%=============================================================================
+\begin{thebibliography}{1}
+\bibitem{prasad2024}
+A. Prasad and S. Chandra, ``PhiUSIIL: A diverse security profile empowered phishing URL
+detection framework based on similarity index and incremental learning,''
+\emph{Computers \& Security}, vol. 136, p. 103545, 2024,
+doi: 10.1016/j.cose.2023.103545.
+
+\bibitem{gobinath2026}
+R. Gobinath and S. Manikandan, ``Deep learning-based phishing classification framework for
+accurate detection using optimized URL intelligence,'' \emph{Scientific Reports}, vol. 16,
+art. 15794, 2026, doi: 10.1038/s41598-026-46481-2.
+
+\bibitem{bao2026}
+T. M. Bao, K. Shashvat, N. G. Nhu, and D. Le, ``A comparative analysis of machine learning
+algorithms for spam and phishing URL classification,'' \emph{Computers, Materials \& Continua},
+vol. 87, no. 2, 2026, doi: 10.32604/cmc.2025.075161.
+
+\bibitem{yulianti2026}
+F. Yulianti and J. Forenziana, ``A comparative analysis of feature selection methods for
+machine learning-based phishing URL detection,'' \emph{Formosa Journal of Computer and
+Information Science}, vol. 5, no. 2, pp. 243--258, 2026, doi: 10.55927/fjcis.v5i2.16783.
+\end{thebibliography}
+
+\end{document}
