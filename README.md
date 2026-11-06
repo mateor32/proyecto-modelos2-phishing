@@ -71,6 +71,8 @@ y disponible en el [UCI Machine Learning Repository](https://archive.ics.uci.edu
 | URLs de phishing | 100.945 (**42,8 %**) |
 | Valores faltantes | **Ninguno** |
 | Filas duplicadas | Ninguna |
+| URLs repetidas | 425 filas (sin conflicto de etiqueta) |
+| Dominios con más de una fila | 5.526 (21.235 muestras) |
 
 Las características se agrupan en tres familias:
 
@@ -113,8 +115,9 @@ con *one-hot*. `TLD` (695 categorías) se codifica mediante `TLDLegitimateProb` 
 
 ### ⚠️ Hallazgo importante: posible *data leakage*
 Se detectaron señales que podrían inflar artificialmente el desempeño y que se vigilarán en el modelado:
-- `URLSimilarityIndex` tiene una correlación de **≈ 0,86** con la etiqueta.
-- **Todas** las URLs con `IsHTTPS = 1` están etiquetadas como legítimas.
+- `URLSimilarityIndex` tiene una correlación de **≈ 0,86** con la etiqueta: todas las legítimas valen 100, frente al 0,78 % del *phishing*, porque el índice compara cada URL con la lista Open PageRank de la que se obtuvieron las legítimas.
+- **Todas** las URLs legítimas usan HTTPS y toda URL sin HTTPS es de *phishing*, aunque 49.689 URLs de *phishing* (49,2 %) también usan HTTPS.
+- **Todas** las legítimas empiezan por `www` y ninguna tiene ruta ni parámetros, así que parte de la separación parece venir de la construcción del conjunto.
 
 Esto es coherente con los desempeños superiores al 99 % reportados en la literatura y refuerza la
 necesidad de un protocolo de validación cuidadoso.
@@ -127,7 +130,7 @@ Es un problema de **aprendizaje supervisado** (hay pares etiquetados) y de **cla
 (la salida es categórica: legítima / phishing). Es el paradigma apropiado porque el objetivo es predecir
 una etiqueta conocida a partir de ejemplos previos, no descubrir estructura latente.
 
-**Plan de evaluación:** partición estratificada + métricas **Exactitud, F1, *Balanced Accuracy*, MCC y AUC**.
+**Plan de evaluación:** partición estratificada y agrupada por dominio + métricas **Exactitud, F1, *Balanced Accuracy*, MCC y AUC**.
 
 ---
 
@@ -137,10 +140,10 @@ Trabajos que emplean el conjunto de datos PhiUSIIL:
 
 | Trabajo | Técnica(s) | Validación | Resultados |
 |---|---|---|---|
-| **Prasad & Chandra, 2024** · *Computers & Security* | Índice de similitud de URL + aprendizaje incremental | Entrenamiento/prueba | **99,24 %** (incremental) · **99,79 %** (pre-entrenamiento) |
-| **Gobinath & Manikandan, 2026** · *Scientific Reports* | Red neuronal profunda con atención *multi-head* (ADUIN) | Estratificada 70/15/15 | 95 % exactitud · 93 % precisión · FPR 3,5 % |
-| **Bao et al., 2026** · *Computers, Materials & Continua* | Random Forest, SVM, Naïve Bayes, MLP | Hold-out 80/20 (+ k-fold) | RF 99,99 % · MLP 99,98 % · SVM 99,97 % |
-| **Yulianti & Forenziana, 2026** · *Formosa J. of Comp. and Inf. Science* | Selección de características (LASSO) | Validación cruzada | LASSO (k=5): F1 0,9975 |
+| **Prasad & Chandra, 2024** · *Computers & Security* | Índice de similitud de URL + aprendizaje incremental (BernoulliNB, Passive-Aggressive, SGD) | Flujo incremental sobre todo el conjunto; pre-entrenamiento con divisiones de 10:90 a 90:10 | **99,24 %** (incremental) · **99,79 %** (pre-entrenamiento, 90:10) |
+| **Gobinath & Manikandan, 2026** · *Scientific Reports* | Red neuronal profunda con atención *multi-head* (ADUIN), con PhiUSIIL, Kaggle y Mendeley | 70/15/15 + 10 repeticiones estratificadas | 95 % exactitud · 93 % precisión · FPR 3,5 % |
+| **Bao et al., 2026** · *Computers, Materials & Continua* | Random Forest, SVM, Naïve Bayes, MLP | Hold-out 80/20 (+ k-fold) | RF 99,99 % · MLP 99,98 % · SVM 99,97 % · NB 99,94 % |
+| **Yulianti & Forenziana, 2026** · *Formosa J. of Comp. and Inf. Science* | Selección de características (LASSO) con 20 variables de URL | Hold-out 80/20 + 5-fold estratificado | LASSO (k=5): F1 0,9975 vs. 0,9965 con 20 variables |
 
 ---
 
@@ -204,8 +207,9 @@ También puedes abrirlo directamente en **Google Colab** subiendo el `.ipynb`.
 
 | Nombre | Correo |
 |---|---|
-| *<<Nombre Apellido>>* | *<<usuario>>@udea.edu.co* |
-| *<<Nombre Apellido>>* | *<<usuario>>@udea.edu.co* |
+| Julián Andrés Agudelo Echeverri | julian.agudelo1@gmail.com |
+| Mateo Reyes Uribe | mateo.reyesu@udea.edu.co |
+| Cristian Lizarazo Camaño | cristian.lizarazoc@udea.edu.co |
 
 Universidad de Antioquia — Facultad de Ingeniería
 Curso: Introducción al Machine Learning (Modelos II)
@@ -216,7 +220,7 @@ Curso: Introducción al Machine Learning (Modelos II)
 
 1. A. Prasad y S. Chandra, "PhiUSIIL: A diverse security profile empowered phishing URL detection framework based on similarity index and incremental learning," *Computers & Security*, vol. 136, art. 103545, 2024. https://doi.org/10.1016/j.cose.2023.103545
 2. R. Gobinath y S. Manikandan, "Deep learning-based phishing classification framework for accurate detection using optimized URL intelligence," *Scientific Reports*, vol. 16, art. 15794, 2026. https://doi.org/10.1038/s41598-026-46481-2
-3. T. M. Bao, K. Shashvat, N. G. Nhu y D. Le, "A comparative analysis of machine learning algorithms for spam and phishing URL classification," *Computers, Materials & Continua*, vol. 87, no. 2, 2026. https://doi.org/10.32604/cmc.2025.075161
+3. T. M. Bao, K. Shashvat, N. G. Nhu y D.-N. Le, "A comparative analysis of machine learning algorithms for spam and phishing URL classification," *Computers, Materials & Continua*, vol. 87, no. 2, 2026. https://doi.org/10.32604/cmc.2025.075161
 4. F. Yulianti y J. Forenziana, "A comparative analysis of feature selection methods for machine learning-based phishing URL detection," *Formosa Journal of Computer and Information Science*, vol. 5, no. 2, pp. 243–258, 2026. https://doi.org/10.55927/fjcis.v5i2.16783
 
 ---
