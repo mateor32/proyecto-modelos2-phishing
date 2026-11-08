@@ -7,10 +7,9 @@
 *Proyecto del curso **Introducción al Machine Learning (Modelos II)** — Universidad de Antioquia*
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?style=flat&logo=scikit-learn&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.9-F7931E?style=flat&logo=scikit-learn&logoColor=white)
 ![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?style=flat&logo=jupyter&logoColor=white)
-![Estado](https://img.shields.io/badge/estado-avance%20parcial-yellow)
-![Licencia](https://img.shields.io/badge/licencia-MIT-green)
+![Estado](https://img.shields.io/badge/estado-entrega%20final-brightgreen)
 
 </div>
 
@@ -18,14 +17,11 @@
 
 ## 📑 Tabla de contenidos
 - [Descripción](#-descripción)
-- [El problema](#-el-problema)
+- [Resultados principales](#-resultados-principales)
 - [Conjunto de datos](#-conjunto-de-datos)
-- [Análisis exploratorio (EDA)](#-análisis-exploratorio-eda)
-- [Paradigma de aprendizaje](#-paradigma-de-aprendizaje)
-- [Estado del arte](#-estado-del-arte)
+- [Metodología](#-metodología)
 - [Estructura del repositorio](#-estructura-del-repositorio)
 - [Cómo reproducir](#-cómo-reproducir)
-- [Hoja de ruta](#-hoja-de-ruta)
 - [Autores](#-autores)
 - [Referencias](#-referencias)
 
@@ -35,115 +31,67 @@
 
 El **phishing** es un ataque en el que un sitio web fraudulento suplanta a una entidad legítima
 para robar credenciales o información financiera. Las listas negras tradicionales son **reactivas**:
-solo bloquean URLs ya reportadas y fallan ante los miles de sitios nuevos que aparecen cada día.
+solo bloquean URLs ya reportadas y fallan ante los sitios nuevos que aparecen cada día.
 
-Este proyecto construye y valida un modelo de **aprendizaje supervisado** que decide,
-de forma automática, si una URL es **legítima** o de **phishing**, a partir de características
-de la propia URL y del código de la página.
-
-> **Avance parcial:** este repositorio contiene la *descripción del problema* (análisis exploratorio)
-> y el *estado del arte*. El modelado y la evaluación corresponden a la entrega final.
+Este proyecto construye y valida modelos de **aprendizaje supervisado** que deciden si una URL es
+**legítima** o de **phishing**. El informe completo, en formato IEEE Transactions, está en
+[`informe.pdf`](informe.pdf).
 
 ---
 
-## 🧩 El problema
+## 🏆 Resultados principales
 
-| | |
-|---|---|
-| **Tarea** | Clasificación binaria (legítima vs. phishing) |
-| **Entrada** | 54 características de la URL y de la página web |
-| **Salida** | `1` = URL legítima · `0` = URL de phishing |
-| **Reto** | Alta tasa de detección con **baja tasa de falsos positivos** (bloquear un sitio legítimo molesta al usuario) |
-| **Utilidad** | Integrable en navegadores, clientes de correo o *gateways* de red, operando en tiempo casi real |
+**Escenario Solo URL** (19 variables calculadas a partir de la URL). MCC en el conjunto de prueba
+(47.074 URLs de dominios que no aparecen en entrenamiento):
+
+| Modelo | MCC validación | MCC prueba | FP | FN |
+|---|---|---|---|---|
+| Regresión logística | 0,9091 ± 0,0015 | 0,9090 ± 0,0038 | 622 | 1.477 |
+| KNN | 0,9653 ± 0,0026 | 0,9678 ± 0,0023 | 296 | 446 |
+| Random Forest | 0,9911 ± 0,0015 | 0,9928 ± 0,0011 | 55 | 112 |
+| **MLP** | **0,9956 ± 0,0014** | **0,9960 ± 0,0008** | 2 | 91 |
+| **SVM (RBF)** | **0,9949 ± 0,0041** | **0,9961 ± 0,0008** | 6 | 85 |
+
+**Hallazgos:**
+- ⚠️ **Fuga de información.** Con las 50 variables numéricas, incluso la regresión logística llega a
+  MCC 0,9998. Variables como `URLSimilarityIndex` e `IsHTTPS` separan las clases casi de forma
+  determinista por cómo se construyó el conjunto, así que el escenario principal las excluye.
+- ✂️ **Selección de variables.** Se pueden eliminar 10 de las 19 variables (52,6 %) sin pérdida
+  apreciable: MLP obtiene MCC de prueba 0,9958 con 9 variables.
+- 📉 **PCA y UMAP.** PCA necesita 14 componentes (99 % de la varianza) para conservar el desempeño;
+  UMAP pierde más de 0,15 en MCC incluso con 10 dimensiones.
 
 ---
 
 ## 📊 Conjunto de datos
 
-**PhiUSIIL Phishing URL Dataset** — Prasad & Chandra (2024), publicado en *Computers & Security* (Elsevier)
-y disponible en el [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/967/phiusiil+phishing+url+dataset).
+**PhiUSIIL Phishing URL Dataset** — Prasad & Chandra (2024), *Computers & Security*, disponible en el
+[UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/967/phiusiil+phishing+url+dataset).
 
 | Propiedad | Valor |
 |---|---|
-| Muestras | **235.795** URLs |
-| Características | **54** (+ etiqueta) |
-| URLs legítimas | 134.850 (**57,2 %**) |
-| URLs de phishing | 100.945 (**42,8 %**) |
-| Valores faltantes | **Ninguno** |
-| Filas duplicadas | Ninguna |
-| URLs repetidas | 425 filas (sin conflicto de etiqueta) |
-| Dominios con más de una fila | 5.526 (21.235 muestras) |
+| Muestras | 235.795 URLs (235.370 sin URLs repetidas) |
+| Características | 54 (+ etiqueta): léxicas de la URL, derivadas y del código HTML |
+| URLs legítimas | 134.850 (57,2 %) |
+| URLs de phishing | 100.945 (42,8 %) |
+| Valores faltantes | Ninguno |
 
-Las características se agrupan en tres familias:
-
-| Grupo | Ejemplos | Qué miden |
-|---|---|---|
-| **Léxicas / estructurales de la URL** | `URLLength`, `DomainLength`, `NoOfSubDomain`, `SpacialCharRatioInURL`, `IsDomainIP` | Forma y composición de la cadena de la URL |
-| **Derivadas** | `URLSimilarityIndex`, `CharContinuationRate`, `TLDLegitimateProb`, `URLCharProb` | Variables calculadas por los autores (índices y probabilidades) |
-| **Del código HTML** | `LineOfCode`, `HasTitle`, `HasFavicon`, `IsResponsive`, `HasPasswordField`, `NoOfJS`, `HasSocialNet` | Atributos extraídos de la página descargada |
-
-Además hay 4 variables de texto (`URL`, `Domain`, `TLD`, `Title`). De las 54 características, **50 son
-numéricas** (19 de ellas binarias) y **4 son de texto/categóricas**.
+En el código la clase positiva es **phishing** (`label = 0` en el archivo original).
 
 ---
 
-## 🔎 Análisis exploratorio (EDA)
+## 🔬 Metodología
 
-Todo el análisis es reproducible en [`notebooks/01_EDA_phishing.ipynb`](notebooks/01_EDA_phishing.ipynb).
-
-### Balance de clases
-El problema está **moderadamente balanceado**, por lo que se usará una partición *estratificada* y
-métricas robustas al desbalance además de la exactitud.
-
-<p align="center"><img src="figures/01_class_balance.png" width="420"></p>
-
-### Correlación de las características con la etiqueta
-Varias características del código HTML y derivadas separan bien las clases.
-
-<p align="center"><img src="figures/02_corr_label.png" width="560"></p>
-
-### Distribuciones por clase
-Diferencias claras entre URLs legítimas y de phishing en variables como `URLSimilarityIndex`.
-
-<p align="center"><img src="figures/03_distributions.png" width="760"></p>
-
-### Cardinalidad de las variables de texto
-`URL`, `Domain` y `Title` son casi identificadores (cardinalidad ≈ nº de muestras) → **no** se codifican
-con *one-hot*. `TLD` (695 categorías) se codifica mediante `TLDLegitimateProb` o por frecuencia.
-
-<p align="center"><img src="figures/04_cardinality.png" width="520"></p>
-
-### ⚠️ Hallazgo importante: posible *data leakage*
-Se detectaron señales que podrían inflar artificialmente el desempeño y que se vigilarán en el modelado:
-- `URLSimilarityIndex` tiene una correlación de **≈ 0,86** con la etiqueta: todas las legítimas valen 100, frente al 0,78 % del *phishing*, porque el índice compara cada URL con la lista Open PageRank de la que se obtuvieron las legítimas.
-- **Todas** las URLs legítimas usan HTTPS y toda URL sin HTTPS es de *phishing*, aunque 49.689 URLs de *phishing* (49,2 %) también usan HTTPS.
-- **Todas** las legítimas empiezan por `www` y ninguna tiene ruta ni parámetros, así que parte de la separación parece venir de la construcción del conjunto.
-
-Esto es coherente con los desempeños superiores al 99 % reportados en la literatura y refuerza la
-necesidad de un protocolo de validación cuidadoso.
-
----
-
-## 🧠 Paradigma de aprendizaje
-
-Es un problema de **aprendizaje supervisado** (hay pares etiquetados) y de **clasificación binaria**
-(la salida es categórica: legítima / phishing). Es el paradigma apropiado porque el objetivo es predecir
-una etiqueta conocida a partir de ejemplos previos, no descubrir estructura latente.
-
-**Plan de evaluación:** partición estratificada y agrupada por dominio + métricas **Exactitud, F1, *Balanced Accuracy*, MCC y AUC**.
-
----
-
-## 📚 Estado del arte
-
-Trabajos que emplean el conjunto de datos PhiUSIIL:
-
-| Trabajo | Técnica(s) | Validación | Resultados |
-|---|---|---|---|
-| **Prasad & Chandra, 2024** · *Computers & Security* | Índice de similitud de URL + aprendizaje incremental (BernoulliNB, Passive-Aggressive, SGD) | Flujo incremental sobre todo el conjunto; pre-entrenamiento con divisiones de 10:90 a 90:10 | **99,24 %** (incremental) · **99,79 %** (pre-entrenamiento, 90:10) |
-| **Gobinath & Manikandan, 2026** · *Scientific Reports* | Red neuronal profunda con atención *multi-head* (ADUIN), con PhiUSIIL, Kaggle y Mendeley | 70/15/15 + 10 repeticiones estratificadas | 95 % exactitud · 93 % precisión · FPR 3,5 % |
-| **Bao et al., 2026** · *Computers, Materials & Continua* | Random Forest, SVM, Naïve Bayes, MLP | Hold-out 80/20 (+ k-fold) | RF 99,99 % · MLP 99,98 % · SVM 99,97 % · NB 99,94 % |
-| **Yulianti & Forenziana, 2026** · *Formosa J. of Comp. and Inf. Science* | Selección de características (LASSO) con 20 variables de URL | Hold-out 80/20 + 5-fold estratificado | LASSO (k=5): F1 0,9975 vs. 0,9965 con 20 variables |
+- **Partición:** 80 % entrenamiento / 20 % prueba, estratificada y **agrupada por dominio**
+  (`StratifiedGroupKFold`), de modo que ningún dominio aparece en ambos conjuntos.
+- **Validación:** validación cruzada estratificada y agrupada de 5 pliegues; intervalos como
+  media ± 2 desviaciones estándar.
+- **Preprocesamiento:** `log(1 + x)` y estandarización dentro de un `Pipeline`.
+- **Métrica principal:** coeficiente de correlación de Matthews (MCC); también exactitud, F1, AUC y FPR.
+- **Modelos:** regresión logística, KNN, Random Forest, MLP y SVM, cada uno con su malla de hiperparámetros.
+- **Reducción de dimensión** sobre los dos mejores modelos: análisis individual (Fisher, AUC,
+  información mutua, correlación), selección de variables, PCA y UMAP, repitiendo la búsqueda de
+  hiperparámetros en cada espacio.
 
 ---
 
@@ -151,55 +99,38 @@ Trabajos que emplean el conjunto de datos PhiUSIIL:
 
 ```
 proyecto-modelos2-phishing/
-├── README.md                      # este archivo
-├── reporte_avance.tex             # informe en plantilla IEEE (Overleaf)
-├── requirements.txt               # dependencias de Python
-├── notebooks/
-│   └── 01_EDA_phishing.ipynb      # análisis exploratorio (Parte II)
-├── figures/                       # gráficas generadas por el notebook
-│   ├── 01_class_balance.png
-│   ├── 02_corr_label.png
-│   ├── 03_distributions.png
-│   └── 04_cardinality.png
-└── data/                          # (no versionado) ver nota abajo
+├── README.md
+├── informe.pdf                     # informe final (IEEE Transactions)
+├── informe.tex                     # fuente LaTeX del informe
+├── requirements.txt
+├── 01_EDA_phishing.ipynb           # Sección 2: análisis exploratorio
+├── 02_modelos.ipynb                # Sección 4: entrenamiento y evaluación de 5 modelos
+├── 03_reduccion_dimension.ipynb    # Sección 5: selección de variables, PCA y UMAP
+├── figures/                        # figuras usadas en el informe
+├── results/                        # mallas, mejores configuraciones y tablas (CSV/JSON)
+└── data/                           # (no versionado) CSV de PhiUSIIL
 ```
 
-> El CSV (~54 MB) **no se versiona** en Git. El notebook descarga los datos automáticamente con `ucimlrepo`.
+Los notebooks 02 y 03 guardan sus resultados en `results/`. Si un archivo ya existe, lo reutilizan en
+lugar de recalcularlo, así que se pueden volver a ejecutar sin repetir el entrenamiento.
 
 ---
 
 ## ⚙️ Cómo reproducir
 
 ```bash
-# 1. Clonar el repositorio
 git clone https://github.com/mateor32/proyecto-modelos2-phishing.git
 cd proyecto-modelos2-phishing
-
-# 2. Instalar dependencias
 pip install -r requirements.txt
-
-# 3. Abrir el notebook
-jupyter notebook notebooks/01_EDA_phishing.ipynb
+jupyter notebook
 ```
 
-Los datos se cargan solos con:
-```python
-from ucimlrepo import fetch_ucirepo
-ds = fetch_ucirepo(id=967)
-X, y = ds.data.features, ds.data.targets
-```
-
-También puedes abrirlo directamente en **Google Colab** subiendo el `.ipynb`.
-
----
-
-## 🗺️ Hoja de ruta
-
-- [x] **Parte I** — Descripción del problema y análisis exploratorio
-- [x] **Parte II** — Estado del arte
-- [ ] **Parte III** — Preprocesamiento y codificación de variables
-- [ ] **Parte IV** — Entrenamiento y comparación de modelos
-- [ ] **Parte V** — Validación, métricas y resultados finales
+- Los datos se descargan solos con `ucimlrepo` si no existe `data/PhiUSIIL_Phishing_URL_Dataset.csv`.
+- Ejecutar los notebooks en orden: **01 → 02 → 03**. El 03 usa los resultados del 02.
+- El entrenamiento completo es pesado (varias horas y bastante memoria). Se ejecutó en
+  **Google Colab**: los notebooks 02 y 03 incluyen una celda inicial que monta Google Drive y trabaja en
+  la carpeta `proyecto-modelos2-phishing`.
+- Para recalcular todo desde cero, cambiar `RECALCULAR = False` a `True` en la celda de parámetros.
 
 ---
 
@@ -211,8 +142,7 @@ También puedes abrirlo directamente en **Google Colab** subiendo el `.ipynb`.
 | Mateo Reyes Uribe | mateo.reyesu@udea.edu.co |
 | Cristian Lizarazo Camaño | cristian.lizarazoc@udea.edu.co |
 
-Universidad de Antioquia — Facultad de Ingeniería
-Curso: Introducción al Machine Learning (Modelos II)
+Universidad de Antioquia — Facultad de Ingeniería · Curso: Introducción al Machine Learning (Modelos II)
 
 ---
 

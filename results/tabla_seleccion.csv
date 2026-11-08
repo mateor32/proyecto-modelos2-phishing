@@ -1,0 +1,11 @@
+Modelo,Conjunto,Variables,Reducción %,MCC val,MCC test,Elegido
+MLP,Todas,19,0.0,0.9956 ± 0.0014,0.9960,
+MLP,Sin redundantes,18,5.3,0.9958 ± 0.0008,-,
+MLP,Sin débiles y sin información mutua,14,26.3,0.9952 ± 0.0013,-,
+MLP,Sin débiles,10,47.4,0.9946 ± 0.0018,-,
+MLP,Sin débiles ni redundantes,9,52.6,0.9954 ± 0.0010,0.9958,Sí
+SVM,Todas,19,0.0,0.9949 ± 0.0041,0.9961,
+SVM,Sin redundantes,18,5.3,0.9947 ± 0.0041,-,
+SVM,Sin débiles y sin información mutua,14,26.3,0.9947 ± 0.0040,-,
+SVM,Sin débiles,10,47.4,0.9937 ± 0.0038,-,
+SVM,Sin débiles ni redundantes,9,52.6,0.9936 ± 0.0041,0.9955,Sí

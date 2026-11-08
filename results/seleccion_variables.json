@@ -1,0 +1,226 @@
+{
+  "MLP": {
+    "Sin redundantes": {
+      "columnas": [
+        "DomainLength",
+        "IsDomainIP",
+        "CharContinuationRate",
+        "URLCharProb",
+        "TLDLength",
+        "NoOfSubDomain",
+        "HasObfuscation",
+        "NoOfObfuscatedChar",
+        "ObfuscationRatio",
+        "NoOfLettersInURL",
+        "LetterRatioInURL",
+        "NoOfDegitsInURL",
+        "DegitRatioInURL",
+        "NoOfEqualsInURL",
+        "NoOfQMarkInURL",
+        "NoOfAmpersandInURL",
+        "NoOfOtherSpecialCharsInURL",
+        "SpacialCharRatioInURL"
+      ],
+      "val": [
+        0.995814960555179,
+        0.0003841921339487614
+      ],
+      "train": [
+        0.9960565391421831,
+        0.00019789123025811808
+      ]
+    },
+    "Sin débiles y sin información mutua": {
+      "columnas": [
+        "URLLength",
+        "DomainLength",
+        "CharContinuationRate",
+        "URLCharProb",
+        "TLDLength",
+        "NoOfSubDomain",
+        "NoOfLettersInURL",
+        "LetterRatioInURL",
+        "NoOfDegitsInURL",
+        "DegitRatioInURL",
+        "NoOfEqualsInURL",
+        "NoOfQMarkInURL",
+        "NoOfOtherSpecialCharsInURL",
+        "SpacialCharRatioInURL"
+      ],
+      "val": [
+        0.9951964131175984,
+        0.0006296188063412711
+      ],
+      "train": [
+        0.9957008935482768,
+        0.00028257805497052695
+      ]
+    },
+    "Sin débiles": {
+      "columnas": [
+        "URLLength",
+        "DomainLength",
+        "CharContinuationRate",
+        "URLCharProb",
+        "NoOfLettersInURL",
+        "LetterRatioInURL",
+        "NoOfDegitsInURL",
+        "DegitRatioInURL",
+        "NoOfOtherSpecialCharsInURL",
+        "SpacialCharRatioInURL"
+      ],
+      "val": [
+        0.9946439762872643,
+        0.0009200353286841317
+      ],
+      "train": [
+        0.9948386361348499,
+        0.0003688494326093159
+      ]
+    },
+    "Sin débiles ni redundantes": {
+      "columnas": [
+        "DomainLength",
+        "CharContinuationRate",
+        "URLCharProb",
+        "NoOfLettersInURL",
+        "LetterRatioInURL",
+        "NoOfDegitsInURL",
+        "DegitRatioInURL",
+        "NoOfOtherSpecialCharsInURL",
+        "SpacialCharRatioInURL"
+      ],
+      "val": [
+        0.9954453559487515,
+        0.0005136541627811317
+      ],
+      "train": [
+        0.9956321693108787,
+        0.0005105720646891062
+      ],
+      "elegido": true,
+      "prueba": {
+        "mcc": 0.995835207511289,
+        "exactitud": 0.9979606576878957,
+        "f1": 0.9976083707025412,
+        "auc": 0.9985964927132341,
+        "fpr": 0.0005190952910641977,
+        "fp": 14,
+        "fn": 82
+      },
+      "medio_intervalo": 0.0008516052001165821
+    }
+  },
+  "SVM": {
+    "Sin redundantes": {
+      "columnas": [
+        "DomainLength",
+        "IsDomainIP",
+        "CharContinuationRate",
+        "URLCharProb",
+        "TLDLength",
+        "NoOfSubDomain",
+        "HasObfuscation",
+        "NoOfObfuscatedChar",
+        "ObfuscationRatio",
+        "NoOfLettersInURL",
+        "LetterRatioInURL",
+        "NoOfDegitsInURL",
+        "DegitRatioInURL",
+        "NoOfEqualsInURL",
+        "NoOfQMarkInURL",
+        "NoOfAmpersandInURL",
+        "NoOfOtherSpecialCharsInURL",
+        "SpacialCharRatioInURL"
+      ],
+      "val": [
+        0.9946679329909138,
+        0.0020401625976773667
+      ],
+      "train": [
+        0.9958389105026214,
+        0.0004908143150416945
+      ]
+    },
+    "Sin débiles y sin información mutua": {
+      "columnas": [
+        "URLLength",
+        "DomainLength",
+        "CharContinuationRate",
+        "URLCharProb",
+        "TLDLength",
+        "NoOfSubDomain",
+        "NoOfLettersInURL",
+        "LetterRatioInURL",
+        "NoOfDegitsInURL",
+        "DegitRatioInURL",
+        "NoOfEqualsInURL",
+        "NoOfQMarkInURL",
+        "NoOfOtherSpecialCharsInURL",
+        "SpacialCharRatioInURL"
+      ],
+      "val": [
+        0.9947323274910597,
+        0.0019857076946443795
+      ],
+      "train": [
+        0.9958875870047563,
+        0.00043140596436838316
+      ]
+    },
+    "Sin débiles": {
+      "columnas": [
+        "URLLength",
+        "DomainLength",
+        "CharContinuationRate",
+        "URLCharProb",
+        "NoOfLettersInURL",
+        "LetterRatioInURL",
+        "NoOfDegitsInURL",
+        "DegitRatioInURL",
+        "NoOfOtherSpecialCharsInURL",
+        "SpacialCharRatioInURL"
+      ],
+      "val": [
+        0.9936946803239468,
+        0.0018877406833038978
+      ],
+      "train": [
+        0.994864550269232,
+        0.000451870047965831
+      ]
+    },
+    "Sin débiles ni redundantes": {
+      "columnas": [
+        "DomainLength",
+        "CharContinuationRate",
+        "URLCharProb",
+        "NoOfLettersInURL",
+        "LetterRatioInURL",
+        "NoOfDegitsInURL",
+        "DegitRatioInURL",
+        "NoOfOtherSpecialCharsInURL",
+        "SpacialCharRatioInURL"
+      ],
+      "val": [
+        0.9935634400377472,
+        0.002027408028701058
+      ],
+      "train": [
+        0.9950265162035317,
+        0.0005097281236682432
+      ],
+      "elegido": true,
+      "prueba": {
+        "mcc": 0.9954896047350659,
+        "exactitud": 0.9977907124952203,
+        "f1": 0.9974080350912172,
+        "auc": 0.9981841956125515,
+        "fpr": 0.0003707823507601571,
+        "fp": 10,
+        "fn": 94
+      },
+      "medio_intervalo": 0.0008775651375879498
+    }
+  }
+}
