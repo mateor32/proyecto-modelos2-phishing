@@ -35,7 +35,7 @@ solo bloquean URLs ya reportadas y fallan ante los sitios nuevos que aparecen ca
 
 Este proyecto construye y valida modelos de **aprendizaje supervisado** que deciden si una URL es
 **legítima** o de **phishing**. El informe completo, en formato IEEE Transactions, está en
-[`informe.pdf`](informe.pdf).
+https://github.com/mateor32/proyecto-modelos2-phishing/blob/main/informeFinal.pdf
 
 **Enlace del vídeo explicativo:** https://youtu.be/SOtgerl5-nA
 
