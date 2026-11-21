@@ -37,6 +37,8 @@ Este proyecto construye y valida modelos de **aprendizaje supervisado** que deci
 **legítima** o de **phishing**. El informe completo, en formato IEEE Transactions, está en
 [`informe.pdf`](informe.pdf).
 
+**Enlace del vídeo explicativo:** https://youtu.be/SOtgerl5-nA
+
 ---
 
 ## 🏆 Resultados principales
