@@ -34,10 +34,11 @@ para robar credenciales o información financiera. Las listas negras tradicional
 solo bloquean URLs ya reportadas y fallan ante los sitios nuevos que aparecen cada día.
 
 Este proyecto construye y valida modelos de **aprendizaje supervisado** que deciden si una URL es
-**legítima** o de **phishing**. El informe completo, en formato IEEE Transactions, está en
-https://github.com/mateor32/proyecto-modelos2-phishing/blob/main/informeFinal.pdf
+**legítima** o de **phishing**. El informe completo, en formato IEEE Transactions, está en: [Informe final](https://github.com/mateor32/proyecto-modelos2-phishing/blob/main/informeFinal.pdf)
 
-**Enlace del vídeo explicativo:** https://youtu.be/SOtgerl5-nA
+
+▶️ [Vídeo explicativo](https://youtu.be/SOtgerl5-nA)
+
 
 ---
 
